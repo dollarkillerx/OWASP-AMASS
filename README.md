@@ -248,11 +248,32 @@ OWASP-AMASS 源码分析
 
 主命令的入口在:
 `cmd/main.go - 86`
-``` 
+``` bash
 amass enum -d example.com
 ```
 
-- enum 模块分析
+这里对用户参数进行分流  到不同的模块下
+`main 101` 
+``` go
+	// 获取用户输入参数进行匹配开头   // 将余下的给到第二层   (例如 ./maass enum  [-help  这里是余下的给到了第二层])
+	switch os.Args[1] {
+	case "db":        // 图形数据库
+		runDBCommand(os.Args[2:])
+	case "enum":      // 子域名枚举
+		runEnumCommand(os.Args[2:])
+	case "intel":     // 更具公开资料查询
+		runIntelCommand(os.Args[2:])
+	case "track":     
+		runTrackCommand(os.Args[2:])
+	case "viz":       // 枚举可视化
+		runVizCommand(os.Args[2:])
+	default:
+		commandUsage(mainUsageMsg, mainFlagSet, defaultBuf)
+		os.Exit(1)
+	}
 ```
 
-```
+- cmd 下的 enum 模块 主要职责 负责enum所需参数的初始化和validate
+  完成初始化后 交付给enum包下的enum进一步处理
+
+### amass的進程守護用了sighup來作 
